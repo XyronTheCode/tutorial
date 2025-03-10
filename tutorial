@@ -1,7 +1,7 @@
 -- venyx ui lib reuploaded by me
 -- init
 local player = game.Players.LocalPlayer
-local inputService = game:GetService("UserInputService")
+local mouse = player:GetMouse()
 
 -- services
 local input = game:GetService("UserInputService")
