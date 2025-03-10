@@ -1,5 +1,3 @@
--- venyx ui lib reuploaded by me
--- init
 local player = game.Players.LocalPlayer
 local mouse = player:GetMouse()
 
