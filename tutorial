@@ -1,7 +1,7 @@
 -- venyx ui lib reuploaded by me
 -- init
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
+local inputService = game:GetService("UserInputService")
 
 -- services
 local input = game:GetService("UserInputService")
@@ -111,7 +111,7 @@ do
 		self.ended = {}
 		
 		input.InputBegan:Connect(function(key,proc)
-			if (input.UserInputType == Enum.UserInputType.Touch or self.keybinds[key.KeyCode]) and not proc then
+			if input.UserInputType == Enum.UserInputType.Keyboard and self.keybinds[key.KeyCode] and not proc then
 				for i, bind in pairs(self.keybinds[key.KeyCode]) do
 					bind()
 				end
@@ -156,8 +156,7 @@ do
 		return key
 	end
 	
-	frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+	function utility:DraggingEnabled(frame, parent)
 	
 		parent = parent or frame
 		
@@ -165,8 +164,8 @@ do
 		local dragging = false
 		local dragInput, mousePos, framePos
 
-frame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		frame.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 				dragging = true
 				mousePos = input.Position
 				framePos = parent.Position
@@ -180,7 +179,7 @@ frame.InputBegan:Connect(function(input)
 		end)
 
 		frame.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement then
+			if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
 				dragInput = input
 			end
 		end)
@@ -216,7 +215,7 @@ do
 	function library.new(title)
 		local container = utility:Create("ScreenGui", {
 			Name = title,
-			Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+			Parent = game.CoreGui
 		}, {
 			utility:Create("ImageLabel", {
 				Name = "Main",
@@ -257,8 +256,8 @@ do
 						BackgroundTransparency = 1,
 						Position = UDim2.new(0, 0, 0, 10),
 						Size = UDim2.new(1, 0, 1, -20),
-						AutomaticCanvasSize = Enum.AutomaticSize.Y,
-						ScrollBarThickness = 5,
+						CanvasSize = UDim2.new(0, 0, 0, 314),
+						ScrollBarThickness = 5
             ScrollingEnabled = true
 					}, {
 						utility:Create("UIListLayout", {
@@ -429,8 +428,7 @@ do
 		
 		table.insert(self.pages, page)
 
-		button.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		button.Activated:Connect(function()
 			self:SelectPage(page, true)
 		end)
 		
@@ -695,8 +693,7 @@ do
 		local text = button.Title
 		local debounce
 		
-		button.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+		button.Activated:Connect(function()
 			
 			if debounce then
 				return
@@ -1403,8 +1400,7 @@ do
 			end
 		end
 		
-		canvas.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		canvas.MouseButton1Down:Connect(function()
 			draggingCanvas = true
 			
 			while draggingCanvas do
@@ -1520,10 +1516,10 @@ do
 			animate(not toggle)
 		end
 		
-		button.MouseButton1Click:Connect(toggleTab)
-		colorpicker.MouseButton1Click:Connect(toggleTab)
+		button.Activated:Connect(toggleTab)
+		ccolorpicker.MouseButton1Click:Connect(toggleTab)
 		
-		tab.Container.Button.MouseButton1Click:Connect(function()
+		tab.Container.Button.Activated:Connect(function()
 			animate()
 		end)
 		
@@ -1649,17 +1645,10 @@ do
 			dragging = false
 		end)
 
-		slider.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-    end
-end)
-
-slider.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
-end)
+		slider.MouseButton1Down:Connect(function(input)
+			dragging = true
+			
+			while dragging do
 				utility:Tween(circle, {ImageTransparency = 0}, 0.1)
 				
 				value = self:updateSlider(slider, nil, nil, min, max, value)
@@ -1783,7 +1772,8 @@ end)
 		
 		list = list or {}
 		
-		search.Button.MouseButton1Click:Connect(function()
+		search.Button.Activated:Connect(function()
+
 			if search.Button.Rotation == 0 then
 				self:updateDropdown(dropdown, nil, list, callback)
 			else
@@ -2145,8 +2135,7 @@ end)
 				})
 			})
 			
-			button.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			button.Activated:Connect(function()
 				if callback then
 					callback(value, function(...)
 						self:updateDropdown(dropdown, ...)
