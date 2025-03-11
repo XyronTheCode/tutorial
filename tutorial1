@@ -1524,7 +1524,15 @@ do
 		end)
 		
 		tab.Close.MouseButton1Click:Connect(function()
-			self:updateColorPicker(colorpicker, nil, lastColor)
+			function section:updateColorPicker(colorpicker, title, color3)
+    colorpicker = self:getModule(colorpicker)
+    if title then
+        colorpicker.Button.Text = title
+    end
+    -- Ensure color3 is applied correctly
+    colorpicker.Color = color3
+end
+
 			animate()
 		end)
 		
@@ -1838,7 +1846,9 @@ do
 			
 			-- sections
 			local existingSections = focusedPage and #focusedPage.sections or 0
+			local existingSections = focusedPage and focusedPage.sections and #focusedPage.sections or 0
 			local sectionsRequired = #page.sections - existingSections
+
 			
 			page:Resize()
 			
@@ -2073,7 +2083,8 @@ do
 		end
 		
 		local bar = slider.Slider.Bar
-		local percent = (mouse.X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
+		local userInputService = game:GetService("UserInputService")
+		local percent = (userInputService:GetMouseLocation().X - bar.AbsolutePosition.X) / bar.AbsoluteSize.X
 		
 		if value then -- support negative ranges
 			percent = (value - min) / (max - min)
@@ -2137,7 +2148,7 @@ do
 			
 			button.Activated:Connect(function()
 				if callback then
-					callback(value, function(...)
+					callback(value, function(newValue)
 						self:updateDropdown(dropdown, ...)
 					end)	
 				end
