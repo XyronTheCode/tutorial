@@ -155,41 +155,45 @@ do
 	end
 	
 	function utility:DraggingEnabled(frame, parent)
-	
-		parent = parent or frame
-		
-		-- stolen from wally or kiriot, kek
-		local dragging = false
-		local dragInput, mousePos, framePos
+    parent = parent or frame
 
-		frame.InputBegan:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseButton1 then
-				dragging = true
-				mousePos = input.Position
-				framePos = parent.Position
-				
-				input.Changed:Connect(function()
-					if input.UserInputState == Enum.UserInputState.End then
-						dragging = false
-					end
-				end)
-			end
-		end)
+    local dragging, dragInput, mousePos, framePos
+    local camera = game.Workspace.CurrentCamera
+    local input = game:GetService("UserInputService")
 
-		frame.InputChanged:Connect(function(input)
-			if input.UserInputType == Enum.UserInputType.MouseMovement then
-				dragInput = input
-			end
-		end)
+    frame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            mousePos = input.Position
+            framePos = parent.Position
 
-		input.InputChanged:Connect(function(input)
-			if input == dragInput and dragging then
-				local delta = input.Position - mousePos
-				parent.Position  = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
-			end
-		end)
+            -- Freeze camera movement while dragging
+            if input.UserInputType == Enum.UserInputType.Touch then
+                camera.CameraType = Enum.CameraType.Scriptable
+            end
 
-	end
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                    camera.CameraType = Enum.CameraType.Custom -- Restore camera movement
+                end
+            end)
+        end
+    end)
+
+    frame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    input.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - mousePos
+            parent.Position = UDim2.new(framePos.X.Scale, framePos.X.Offset + delta.X, framePos.Y.Scale, framePos.Y.Offset + delta.Y)
+        end
+    end)
+end
 	
 	function utility:DraggingEnded(callback)
 		table.insert(self.ended, callback)
@@ -1628,13 +1632,13 @@ do
 		local value = default or min
 		local dragging, last
 		
-		local callback = function(value)
-			if callback then
-				callback(value, function(...)
-					self:updateSlider(slider, ...)
-				end)
-			end
-		end
+	 	local callback = function(value)
+    if callback then
+        callback(value, function(newColor)
+            self:updateColorPicker(colorpicker, newColor) -- Ensure color updates
+        end)
+    end
+end
 		
 		self:updateSlider(slider, nil, value, min, max)
 		
@@ -1643,20 +1647,24 @@ do
 		end)
 
 		slider.MouseButton1Down:Connect(function(input)
-			dragging = true
-			
-			while dragging do
-				utility:Tween(circle, {ImageTransparency = 0}, 0.1)
-				
-				value = self:updateSlider(slider, nil, nil, min, max, value)
-				callback(value)
-				
-				utility:Wait()
-			end
-			
-			wait(0.5)
-			utility:Tween(circle, {ImageTransparency = 1}, 0.2)
-		end)
+    dragging = true
+
+    while dragging do
+        utility:Tween(circle, {ImageTransparency = 0}, 0.1)
+
+        value = self:updateSlider(slider, nil, nil, min, max, value)
+        callback(value)
+
+        utility:Wait()
+    end
+
+    wait(0.5)
+    utility:Tween(circle, {ImageTransparency = 1}, 0.2)
+end)
+
+slider.MouseButton1Up:Connect(function()
+    dragging = false -- Stop slider when finger is lifted
+end)
 		
 		textbox.FocusLost:Connect(function()
 			if not tonumber(textbox.Text) then
@@ -1901,20 +1909,21 @@ do
 	end
 	
 	function page:Resize(scroll)
-		local padding = 10
-		local size = 0
-		
-		for i, section in pairs(self.sections) do
-			size = size + section.container.Parent.AbsoluteSize.Y + padding
-		end
-		
-		self.container.CanvasSize = UDim2.new(0, 0, 0, size)
-		self.container.ScrollBarImageTransparency = size > self.container.AbsoluteSize.Y
-		
-		if scroll then
-			utility:Tween(self.container, {CanvasPosition = Vector2.new(0, self.lastPosition or 0)}, 0.2)
-		end
-	end
+    local padding = 10
+    local size = 0
+
+    for _, section in pairs(self.sections) do
+        size = size + section.container.Parent.AbsoluteSize.Y + padding
+    end
+
+    self.container.CanvasSize = UDim2.new(0, 0, 0, size + 50) -- Ensure extra space
+    self.container.ScrollBarImageTransparency = size > self.container.AbsoluteSize.Y
+
+    if scroll then
+        utility:Tween(self.container, {CanvasPosition = Vector2.new(0, self.lastPosition or 0)}, 0.2)
+    end
+end
+
 	
 	function section:Resize(smooth)
 	
