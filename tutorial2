@@ -1007,18 +1007,38 @@ do
 		return keybind
 	end
 	
-	function section:addColorPicker(title, default, callback)
-		local colorpicker = utility:Create("ImageButton", {
-			Name = "ColorPicker",
-			Parent = self.container,
-			BackgroundTransparency = 1,
-			BorderSizePixel = 0,
-			Size = UDim2.new(1, 0, 0, 30),
-			ZIndex = 2,
-			Image = "rbxassetid://5028857472",
-			ImageColor3 = themes.DarkContrast,
-			ScaleType = Enum.ScaleType.Slice,
-			SliceCenter = Rect.new(2, 2, 298, 298)
+	local UserInputService = game:GetService("UserInputService")
+
+function section:addColorPicker(title, default, callback)
+    local colorpicker = utility:Create("ImageButton", {
+        Name = "ColorPicker",
+        Parent = self.container,
+        BackgroundTransparency = 1,
+        Size = UDim2.new(1, 0, 0, 30),
+        ZIndex = 2,
+        Image = "rbxassetid://5028857472",
+        ImageColor3 = themes.DarkContrast,
+        ScaleType = Enum.ScaleType.Slice,
+        SliceCenter = Rect.new(2, 2, 298, 298)
+    })
+
+    local function updateColor(newColor)
+        if callback then
+            callback(newColor)
+        end
+    end
+
+    -- Add Mobile & Mouse Support
+    local function onClick()
+        print("✅ Color Picker Clicked!")  -- Debugging output
+        updateColor(Color3.new(math.random(), math.random(), math.random())) -- Placeholder for UI color selection
+    end
+
+    colorpicker.MouseButton1Click:Connect(onClick)
+    UserInputService.TouchTap:Connect(onClick) -- Mobile Support
+
+    return colorpicker
+end
 		},{
 			utility:Create("TextLabel", {
 				Name = "Title",
