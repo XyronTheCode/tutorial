@@ -1,5 +1,5 @@
 local player = game.Players.LocalPlayer
-local touchInput = game:GetService("UserInputService").TouchEnabled
+local inputService = game:GetService("UserInputService")
 -- services
 local input = game:GetService("UserInputService")
 local run = game:GetService("RunService")
