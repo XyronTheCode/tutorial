@@ -1664,10 +1664,6 @@ slider.InputEnded:Connect(function(input)
         dragging = false -- Stop sliding when user lifts finger
     end
 end)
-
-slider.MouseButton1Up:Connect(function()
-    dragging = false -- Stop slider when finger is lifted
-end)
 		
 		textbox.FocusLost:Connect(function()
 			if not tonumber(textbox.Text) then
