@@ -1,5 +1,5 @@
 local player = game.Players.LocalPlayer
-local mouse = player:GetMouse()
+local inputService = game:GetService("UserInputService")
 
 -- services
 local input = game:GetService("UserInputService")
