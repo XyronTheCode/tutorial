@@ -172,12 +172,12 @@ do
                 camera.CameraType = Enum.CameraType.Scriptable
             end
 
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then
-                    dragging = false
-                    camera.CameraType = Enum.CameraType.Custom -- Restore camera movement
-                end
-            end)
+            input.InputEnded:Connect(function(endInput)
+    if endInput.UserInputType == Enum.UserInputType.Touch or endInput.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+        camera.CameraType = Enum.CameraType.Custom -- Restore camera movement
+               end
+	   end)
         end
     end)
 
