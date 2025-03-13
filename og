@@ -1551,7 +1551,7 @@ do
 				Text = title,
 				TextColor3 = themes.TextColor,
 				TextSize = 12,
-				TextTransparency = 0.10000000149012,
+				TextTransparency = 0.1,
 				TextXAlignment = Enum.TextXAlignment.Left
 			}),
 			utility:Create("TextBox", {
@@ -1614,8 +1614,7 @@ do
 		})
 		
 		table.insert(self.modules, slider)
-		--self:Resize()
-		
+
 		local allowed = {
 			[""] = true,
 			["-"] = true
@@ -1623,9 +1622,8 @@ do
 		
 		local textbox = slider.TextBox
 		local circle = slider.Slider.Bar.Fill.Circle
-		
 		local value = default or min
-		local dragging, last
+		local dragging = false
 		
 		local callback = function(value)
 			if callback then
@@ -1636,46 +1634,55 @@ do
 		end
 		
 		self:updateSlider(slider, nil, value, min, max)
-		
+
 		utility:DraggingEnded(function()
 			dragging = false
 		end)
 
-		slider.MouseButton1Down:Connect(function(input)
+		-- Disable Mouse Inputs for PC
+		slider.InputBegan:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 then
+				return -- Prevent PC users from dragging
+			end
+		end)
+
+		-- Enable Touch for Mobile
+		slider.TouchTap:Connect(function()
 			dragging = true
-			
-			while dragging do
-				utility:Tween(circle, {ImageTransparency = 0}, 0.1)
-				
-				value = self:updateSlider(slider, nil, nil, min, max, value)
-				callback(value)
-				
-				utility:Wait()
-			end
-			
-			wait(0.5)
-			utility:Tween(circle, {ImageTransparency = 1}, 0.2)
 		end)
-		
+
+		game:GetService("UserInputService").TouchMoved:Connect(function(input)
+			if dragging then
+				local position = input.Position.X - slider.AbsolutePosition.X
+				local newValue = math.clamp((position / slider.AbsoluteSize.X) * (max - min) + min, min, max)
+				self:updateSlider(slider, nil, newValue, min, max)
+				callback(newValue)
+			end
+		end)
+
+		-- Ensure dragging stops properly when lifting the finger
+		game:GetService("UserInputService").TouchEnded:Connect(function(input)
+			if input.UserInputType == Enum.UserInputType.Touch then
+				dragging = false
+			end
+		end)
+
+		-- Disable Text Input for PC
 		textbox.FocusLost:Connect(function()
-			if not tonumber(textbox.Text) then
-				value = self:updateSlider(slider, nil, default or min, min, max)
-				callback(value)
+			if game:GetService("UserInputService").MouseEnabled then
+				textbox.Text = value -- Reset if on PC
+			else
+				if tonumber(textbox.Text) then
+					value = math.clamp(tonumber(textbox.Text), min, max)
+					self:updateSlider(slider, nil, value, min, max)
+					callback(value)
+				else
+					textbox.Text = value
+				end
 			end
 		end)
-		
-		textbox:GetPropertyChangedSignal("Text"):Connect(function()
-			local text = textbox.Text
-			
-			if not allowed[text] and not tonumber(text) then
-				textbox.Text = text:sub(1, #text - 1)
-			elseif not allowed[text] then	
-				value = self:updateSlider(slider, nil, tonumber(text) or value, min, max)
-				callback(value)
-			end
-		end)
-		
-		return slider
+
+	return slider
 	end
 	
 	function section:addDropdown(title, list, callback)
